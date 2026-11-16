@@ -615,6 +615,32 @@
     <!-- ========================================== -->
     <!-- SUPABASE & APPLICATION LOGIC               -->
     <!-- ========================================== -->
+    <!-- Boot error reporter: shows the real cause on the loading screen if app.js fails -->
+    <script>
+    (function () {
+        function show(msg) {
+            var el = document.getElementById('loading-screen');
+            if (!el || el.classList.contains('hidden')) return;
+            var p = document.getElementById('boot-error');
+            if (!p) {
+                p = document.createElement('pre');
+                p.id = 'boot-error';
+                p.style.cssText = 'margin-top:16px;max-width:90%;white-space:pre-wrap;word-break:break-word;font-size:11px;color:#b91c1c;text-align:left';
+                el.appendChild(p);
+            }
+            p.textContent += msg + '\n';
+        }
+        window.addEventListener('error', function (e) {
+            var t = e.target;
+            if (t && (t.src || t.href)) show('โหลดไฟล์ไม่ได้: ' + (t.src || t.href));
+            else show('Error: ' + e.message);
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+            show('Error: ' + ((e.reason && e.reason.message) || e.reason));
+        });
+        setTimeout(function () { show('ยังโหลดไม่เสร็จหลัง 10 วินาที (app.js อาจไม่ทำงาน)'); }, 10000);
+    })();
+    </script>
     <script type="module" src="app.js"></script>
 </body>
 </html>

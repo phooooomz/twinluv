@@ -2,13 +2,20 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // 1. Supabase Initialization
 // Cloudflare Pages: ใส่ค่าจาก Supabase Dashboard > Project Settings > API
-const SUPABASE_URL = 'https://vpybtmzoezjcajzcvwfd.supabase.co;
-const SUPABASE_ANON_KEY = 'sb_publishable_WO9uj7HXQZCXKrKH5_cHMw_F3pGVjh5';
+const SUPABASE_URL = 'https://YOUR_PROJECT_REF.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const isConfigured = !SUPABASE_URL.includes('YOUR_PROJECT_REF') && !SUPABASE_ANON_KEY.startsWith('YOUR_');
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true }
-});
+let supabase = null;
+let clientError = null;
+try {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+    });
+} catch (e) {
+    clientError = e;
+    console.error("Supabase client init failed:", e);
+}
 
 // 2. Application State
 const state = {
@@ -60,9 +67,11 @@ const MOOD_MAP = {
 
 // 3. Authentication & Bootstrapping (anonymous sign-in, session persisted in localStorage)
 async function initApp() {
-    if (!isConfigured) {
+    if (!isConfigured || !supabase) {
         showView('auth');
-        showToast("ยังไม่ได้ตั้งค่า Supabase URL / anon key ในไฟล์", "error");
+        showToast(clientError
+            ? "ค่า Supabase URL / key ไม่ถูกต้อง: " + clientError.message
+            : "ยังไม่ได้ตั้งค่า Supabase URL / anon key ในไฟล์ app.js", "error");
         return;
     }
     try {
