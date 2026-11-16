@@ -661,25 +661,15 @@
     <!-- ========================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, 
-            collection, addDoc, onSnapshot, serverTimestamp, arrayUnion 
+            collection, addDoc, onSnapshot, serverTimestamp, arrayUnion, increment 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase-config.js";
 
-        // 1. Firebase Initialization (Environment Config with Cloudflare Pages Fallback)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'together-our-little-world';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                // For Cloudflare Pages Deployment: Replace with your Firebase Web App Config
-                apiKey: "AIzaSyBNF1qDZgGk_Y874pH0-RSEJ_Ext49W-3g",
-                authDomain: "jp-cloud-firebase.firebaseapp.com",
-                projectId: "jp-cloud-firebase",
-                storageBucket: "jp-cloud-firebase.firebasestorage.app",
-                messagingSenderId: "781789980683",
-                appId: "1:781789980683:web:c866981ce46701f1f17f0e"
-            };
+        // 1. Firebase Initialization (config lives in firebase-config.js)
+        const appId = 'twinluv';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -736,11 +726,7 @@
         // 3. Authentication & Bootstrapping (RULE 3: Auth Before Queries)
         async function initApp() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch (error) {
                 console.error("Auth Error:", error);
                 showToast("เกิดข้อผิดพลาดในการเชื่อมต่อระบบยืนยันตัวตน", "error");
@@ -1023,11 +1009,9 @@
         }
 
         async function addCoins(amount) {
-            if (!state.user || !state.roomId || !state.roomData) return;
-            const currentCoins = state.roomData.coins || 0;
-            const newCoins = Math.max(0, currentCoins + amount);
+            if (!state.user || !state.roomId) return;
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', state.roomId);
-            await updateDoc(roomRef, { coins: newCoins });
+            await updateDoc(roomRef, { coins: increment(amount) });
         }
 
         // Helper: Get Partner Info
