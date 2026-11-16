@@ -169,7 +169,7 @@ async function dbDeleteDoc(kind, id) {
     if (error) throw error;
 }
 
-// 4. Room Creation & Joining (Public Shared Room Path - RULE 1)
+// 4. Room Creation & Joining
 function generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
@@ -194,7 +194,6 @@ window.handleCreateRoom = async () => {
         const uid = state.user.uid;
         let roomCode = null;
 
-        // Retry on the (unlikely) room-code collision (unique violation = 23505)
         for (let attempt = 0; attempt < 5 && !roomCode; attempt++) {
             const code = generateRoomCode();
             const { error } = await supabase.from('rooms').insert({
@@ -256,7 +255,6 @@ window.handleJoinRoom = async () => {
 
     setLoading(true);
     try {
-        // join_room is a SECURITY DEFINER function: checks the room exists, max 2 members, adds this user
         const { error } = await supabase.rpc('join_room', { p_code: code, p_name: name });
         if (error) {
             setLoading(false);
@@ -287,7 +285,7 @@ window.handleJoinRoom = async () => {
     }
 };
 
-// 5. Real-time Subscriptions (Supabase Realtime -> refetch the changed dataset)
+// 5. Real-time Subscriptions
 async function refreshRoom() {
     const code = state.roomId;
     if (!code) return;
@@ -331,7 +329,6 @@ async function refreshKind(kind) {
             renderDashboardUI();
         } else if (kind === 'activities') {
             items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            // Show toast notification if partner performed a new action
             if (state.activities.length > 0 && items.length > state.activities.length) {
                 const latest = items[0];
                 if (latest.actorUid !== state.user?.uid) {
@@ -361,9 +358,8 @@ async function subscribeToRoom(roomCode) {
     state.quizzes = [];
     state.activities = [];
 
-    // Initial load (room first so renderers have roomData)
     await refreshRoom();
-    if (state.roomId !== roomCode) return; // room was missing -> already left
+    if (state.roomId !== roomCode) return;
     await Promise.all(ALL_KINDS.map(refreshKind));
 
     let firstSubscribe = true;
@@ -380,7 +376,6 @@ async function subscribeToRoom(roomCode) {
             })
         .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-                // Re-sync after a reconnect so nothing is missed
                 if (!firstSubscribe) refreshAll();
                 firstSubscribe = false;
             }
@@ -394,7 +389,6 @@ function clearSubscriptions() {
     state.unsubscribers = [];
 }
 
-// Re-sync when the tab becomes visible again (mobile browsers pause websockets)
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden && state.roomId && state.user) refreshAll();
 });
@@ -414,12 +408,10 @@ async function logActivity(message) {
 
 async function addCoins(amount) {
     if (!state.user || !state.roomId || !state.roomData) return;
-    // Atomic increment on the server (no lost updates when both partners earn coins)
     const { error } = await supabase.rpc('add_coins', { p_code: state.roomId, p_amount: amount });
     if (error) console.error("Add Coins Error:", error);
 }
 
-// Helper: Get Partner Info
 function getPartnersInfo() {
     const members = state.roomData?.members || {};
     const myUid = state.user?.uid;
@@ -460,7 +452,6 @@ window.submitDailyCheckin = async () => {
     const { me } = getPartnersInfo();
 
     try {
-        // Use deterministic doc ID per user per day so they can update today's check-in
         const docId = `${todayStr}_${state.user.uid}`;
         const existing = await dbGetDoc('daily', docId);
         const isFirstTimeToday = !existing;
@@ -513,7 +504,6 @@ function renderDailyUI() {
         `}
     `;
 
-    // Render History Timeline
     const historyList = document.getElementById('daily-history-list');
     if (state.dailyLogs.length === 0) {
         historyList.innerHTML = `<p class="text-xs text-zinc-400 text-center py-8">ยังไม่มีประวัติการเช็กอิน เริ่มบันทึกวันแรกของคุณได้เลย!</p>`;
@@ -805,6 +795,7 @@ function renderSomedayUI() {
 
 // ==========================================
 // FEATURE 3: HOW WELL DO YOU KNOW ME? LOGIC
+// (รองรับทั้งแบบเลือกคำตอบ และแบบกรอกคำตอบเอง)
 // ==========================================
 window.openCreateQuizModal = () => {
     openModal(`
@@ -813,12 +804,27 @@ window.openCreateQuizModal = () => {
             <button onclick="closeModal()" class="text-zinc-400 hover:text-zinc-900"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <div class="space-y-4">
+            <!-- เลือกรูปแบบคำถาม -->
+            <div>
+                <label class="block text-xs font-semibold text-zinc-500 mb-1.5">รูปแบบการตอบคำถาม</label>
+                <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-100 rounded-xl">
+                    <button type="button" id="qz-type-choice-btn" onclick="switchQuizType('choice')" class="py-2 text-xs font-semibold rounded-lg bg-white text-zinc-900 shadow-2xs transition-all">
+                        🔘 แบบเลือกคำตอบ
+                    </button>
+                    <button type="button" id="qz-type-text-btn" onclick="switchQuizType('text')" class="py-2 text-xs font-semibold rounded-lg text-zinc-500 hover:text-zinc-900 transition-all">
+                        ✍️ แบบกรอกคำตอบเอง
+                    </button>
+                </div>
+                <input type="hidden" id="qz-type" value="choice">
+            </div>
+
             <div class="flex items-center justify-between bg-zinc-50 p-3 rounded-xl border border-zinc-200">
                 <span class="text-xs text-zinc-600">คิดคำถามไม่ออกใช่ไหม?</span>
                 <button type="button" onclick="fillRandomQuestion()" class="px-3 py-1.5 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 flex items-center gap-1.5">
                     <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> สุ่มคำถาม
                 </button>
             </div>
+
             <div>
                 <label class="block text-xs font-semibold text-zinc-500 mb-1.5">หมวดหมู่คำถาม</label>
                 <select id="qz-category" class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm focus:outline-none focus:border-zinc-900">
@@ -828,17 +834,22 @@ window.openCreateQuizModal = () => {
                     <option value="เรื่องราวส่วนตัว">เรื่องราวส่วนตัว</option>
                 </select>
             </div>
+
             <div>
                 <label class="block text-xs font-semibold text-zinc-500 mb-1.5">คำถามของคุณ *</label>
                 <input type="text" id="qz-question" placeholder="เช่น ฉันชอบกินอะไรเวลาฝนตก?" 
                     class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-zinc-900">
             </div>
+
             <div>
                 <label class="block text-xs font-semibold text-zinc-500 mb-1.5">คำตอบที่ถูกต้อง (เฉลยของฉัน) *</label>
                 <input type="text" id="qz-correct" placeholder="คำตอบที่แท้จริงของคุณ" 
                     class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-zinc-900">
+                <p id="qz-text-hint" class="hidden text-[11px] text-zinc-400 mt-1">ระบบจะตรวจคำตอบโดยตัดช่องว่างหัว-ท้ายและไม่แยกตัวพิมพ์เล็ก-ใหญ่</p>
             </div>
-            <div class="grid grid-cols-2 gap-2">
+
+            <!-- ส่วนตัวเลือกหลอก (แสดงเฉพาะแบบเลือกคำตอบ) -->
+            <div id="qz-choices-panel" class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="block text-xs font-semibold text-zinc-500 mb-1.5">ตัวเลือกหลอก 1 *</label>
                     <input type="text" id="qz-wrong1" placeholder="ตัวเลือกที่ 2" 
@@ -850,6 +861,7 @@ window.openCreateQuizModal = () => {
                         class="w-full px-3 py-2 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-zinc-900">
                 </div>
             </div>
+
             <div class="pt-2 flex gap-2 justify-end">
                 <button onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-600">ยกเลิก</button>
                 <button onclick="submitNewQuiz()" class="px-5 py-2.5 rounded-xl bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800">ส่งคำถาม</button>
@@ -857,6 +869,26 @@ window.openCreateQuizModal = () => {
         </div>
     `);
     lucide.createIcons();
+};
+
+window.switchQuizType = (type) => {
+    document.getElementById('qz-type').value = type;
+    const choiceBtn = document.getElementById('qz-type-choice-btn');
+    const textBtn = document.getElementById('qz-type-text-btn');
+    const choicesPanel = document.getElementById('qz-choices-panel');
+    const textHint = document.getElementById('qz-text-hint');
+
+    if (type === 'choice') {
+        choiceBtn.className = 'py-2 text-xs font-semibold rounded-lg bg-white text-zinc-900 shadow-2xs transition-all';
+        textBtn.className = 'py-2 text-xs font-semibold rounded-lg text-zinc-500 hover:text-zinc-900 transition-all';
+        choicesPanel.classList.remove('hidden');
+        textHint.classList.add('hidden');
+    } else {
+        textBtn.className = 'py-2 text-xs font-semibold rounded-lg bg-white text-zinc-900 shadow-2xs transition-all';
+        choiceBtn.className = 'py-2 text-xs font-semibold rounded-lg text-zinc-500 hover:text-zinc-900 transition-all';
+        choicesPanel.classList.add('hidden');
+        textHint.classList.remove('hidden');
+    }
 };
 
 window.fillRandomQuestion = () => {
@@ -867,23 +899,33 @@ window.fillRandomQuestion = () => {
 
 window.submitNewQuiz = async () => {
     if (!state.user || !state.roomId) return;
+    const type = document.getElementById('qz-type')?.value || 'choice';
     const category = document.getElementById('qz-category').value;
     const question = document.getElementById('qz-question').value.trim();
     const correct = document.getElementById('qz-correct').value.trim();
-    const wrong1 = document.getElementById('qz-wrong1').value.trim();
-    const wrong2 = document.getElementById('qz-wrong2').value.trim();
 
-    if (!question || !correct || !wrong1 || !wrong2) {
-        showToast("กรุณากรอกคำถามและตัวเลือกให้ครบทุกช่อง", "error");
+    if (!question || !correct) {
+        showToast("กรุณากรอกคำถามและคำตอบที่ถูกต้อง", "error");
         return;
     }
 
-    // Shuffle options
-    const options = [correct, wrong1, wrong2].sort(() => Math.random() - 0.5);
+    let options = [];
+    if (type === 'choice') {
+        const wrong1 = document.getElementById('qz-wrong1').value.trim();
+        const wrong2 = document.getElementById('qz-wrong2').value.trim();
+        if (!wrong1 || !wrong2) {
+            showToast("กรุณากรอกตัวเลือกหลอกให้ครบทุกช่อง", "error");
+            return;
+        }
+        options = [correct, wrong1, wrong2].sort(() => Math.random() - 0.5);
+    }
+
     const { me } = getPartnersInfo();
+    const typeLabel = type === 'text' ? 'แบบกรอกคำตอบเอง' : 'แบบเลือกคำตอบ';
 
     try {
         await dbAddDoc('quizzes', {
+            type,
             category,
             question,
             correctAnswer: correct,
@@ -896,13 +938,24 @@ window.submitNewQuiz = async () => {
             createdAt: Date.now()
         });
 
-        await logActivity(`${me.name} ตั้งคำถามทายใจใหม่ในหมวด "${category}"`);
+        await logActivity(`${me.name} ตั้งคำถามทายใจ (${typeLabel}) ในหมวด "${category}"`);
         closeModal();
         showToast("ส่งคำถามให้อีกฝ่ายเรียบร้อย!", "success");
     } catch (err) {
         console.error("Create Quiz Error:", err);
         showToast("เกิดข้อผิดพลาดในการสร้างคำถาม", "error");
     }
+};
+
+window.submitTextQuizAnswer = async (quizId) => {
+    const input = document.getElementById(`quiz-text-input-${quizId}`);
+    if (!input) return;
+    const answer = input.value.trim();
+    if (!answer) {
+        showToast("กรุณาพิมพ์คำตอบก่อนส่งนะ", "error");
+        return;
+    }
+    await window.answerQuiz(quizId, answer);
 };
 
 window.answerQuiz = async (quizId, chosenOption) => {
@@ -915,14 +968,17 @@ window.answerQuiz = async (quizId, chosenOption) => {
         return;
     }
 
-    const isCorrect = chosenOption === quiz.correctAnswer;
+    // ตรวจคำตอบ (ตัดช่องว่างหัว-ท้าย และเปรียบเทียบแบบไม่สนตัวพิมพ์เล็ก-ใหญ่)
+    const normalizedChosen = String(chosenOption).trim().toLowerCase();
+    const normalizedCorrect = String(quiz.correctAnswer).trim().toLowerCase();
+    const isCorrect = normalizedChosen === normalizedCorrect;
     const { me } = getPartnersInfo();
 
     try {
         await dbPatchDoc('quizzes', quizId, {
             answeredByUid: state.user.uid,
             answeredByName: me.name,
-            selectedAnswer: chosenOption,
+            selectedAnswer: String(chosenOption).trim(),
             isCorrect,
             answeredAt: Date.now()
         });
@@ -965,21 +1021,39 @@ function renderQuizUI() {
     } else {
         activeContainer.innerHTML = activeQuizzes.map(q => {
             const isMyQuestion = q.creatorUid === me.uid;
+            const isTextType = q.type === 'text';
+            const typeBadge = isTextType
+                ? `<span class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-900 text-white">✍️ พิมพ์ตอบ</span>`
+                : `<span class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600">🔘 ตัวเลือก</span>`;
+
             return `
                 <div class="bg-white border border-zinc-200 rounded-2xl p-5">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-100 text-zinc-700">${escapeHTML(q.category)}</span>
-                        <span class="text-xs text-zinc-400">ถามโดย ${escapeHTML(q.creatorName)}</span>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-100 text-zinc-700">${escapeHTML(q.category)}</span>
+                            ${typeBadge}
+                        </div>
+                        <span class="text-xs text-zinc-400 shrink-0">ถามโดย ${escapeHTML(q.creatorName)}</span>
                     </div>
                     <h4 class="font-bold text-base text-zinc-900 mb-4">${escapeHTML(q.question)}</h4>
                     ${isMyQuestion ? `
-                        <div class="p-3 rounded-xl bg-zinc-50 border border-zinc-100 text-xs text-zinc-500 flex items-center justify-between">
+                        <div class="p-3 rounded-xl bg-zinc-50 border border-zinc-100 text-xs text-zinc-500 flex items-center justify-between gap-2">
                             <span>รอให้อีกฝ่ายเข้ามาทายคำตอบ...</span>
                             <span class="font-medium text-zinc-700">เฉลย: ${escapeHTML(q.correctAnswer)}</span>
                         </div>
+                    ` : isTextType ? `
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="quiz-text-input-${q.id}" placeholder="พิมพ์คำตอบของคุณที่นี่..."
+                                onkeydown="if(event.key==='Enter') submitTextQuizAnswer('${q.id}')"
+                                class="flex-1 px-3.5 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
+                            <button onclick="submitTextQuizAnswer('${q.id}')"
+                                class="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition-colors shrink-0">
+                                ส่งคำตอบ
+                            </button>
+                        </div>
                     ` : `
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            ${q.options.map(opt => `
+                            ${(q.options || []).map(opt => `
                                 <button onclick="answerQuiz('${q.id}', '${escapeHTML(opt).replace(/'/g, "\\'")}')" 
                                     class="p-3 rounded-xl border border-zinc-200 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white text-sm font-medium text-left transition-all">
                                     ${escapeHTML(opt)}
@@ -996,25 +1070,28 @@ function renderQuizUI() {
     if (pastQuizzes.length === 0) {
         historyContainer.innerHTML = `<div class="bg-white border border-zinc-200 rounded-2xl p-6 text-center text-xs text-zinc-400">ยังไม่มีประวัติการเล่น</div>`;
     } else {
-        historyContainer.innerHTML = pastQuizzes.map(q => `
-            <div class="bg-white border border-zinc-200 rounded-2xl p-4 flex items-center justify-between gap-4">
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2 text-[11px] text-zinc-400 mb-1">
-                        <span>${escapeHTML(q.category)}</span> • <span>ถามโดย ${escapeHTML(q.creatorName)}</span>
+        historyContainer.innerHTML = pastQuizzes.map(q => {
+            const modeText = q.type === 'text' ? 'พิมพ์ตอบ' : 'ตัวเลือก';
+            return `
+                <div class="bg-white border border-zinc-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 text-[11px] text-zinc-400 mb-1">
+                            <span>${escapeHTML(q.category)}</span> • <span>${modeText}</span> • <span>ถามโดย ${escapeHTML(q.creatorName)}</span>
+                        </div>
+                        <p class="text-sm font-semibold text-zinc-900 truncate">${escapeHTML(q.question)}</p>
+                        <p class="text-xs text-zinc-500 mt-1">
+                            ${escapeHTML(q.answeredByName)} ตอบ: <strong class="text-zinc-800">${escapeHTML(q.selectedAnswer)}</strong> 
+                            ${!q.isCorrect ? `(เฉลย: ${escapeHTML(q.correctAnswer)})` : ''}
+                        </p>
                     </div>
-                    <p class="text-sm font-semibold text-zinc-900 truncate">${escapeHTML(q.question)}</p>
-                    <p class="text-xs text-zinc-500 mt-1">
-                        ${escapeHTML(q.answeredByName)} ตอบ: <strong class="text-zinc-800">${escapeHTML(q.selectedAnswer)}</strong> 
-                        ${!q.isCorrect ? `(เฉลย: ${escapeHTML(q.correctAnswer)})` : ''}
-                    </p>
+                    <div class="shrink-0">
+                        ${q.isCorrect 
+                            ? `<span class="px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-xs font-medium">ถูกต้อง ✓</span>` 
+                            : `<span class="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-500 text-xs font-medium">ตอบผิด ✕</span>`}
+                    </div>
                 </div>
-                <div class="shrink-0">
-                    ${q.isCorrect 
-                        ? `<span class="px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-xs font-medium">ถูกต้อง ✓</span>` 
-                        : `<span class="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-500 text-xs font-medium">ตอบผิด ✕</span>`}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 }
 
@@ -1127,7 +1204,6 @@ window.buyOrEquipShopItem = async (itemId) => {
     let coins = state.roomData.coins || 0;
     const { me } = getPartnersInfo();
 
-    // Consumable items
     if (item.type === 'consumable') {
         if (coins < item.price) {
             showToast("เหรียญไม่เพียงพอ", "error");
@@ -1146,7 +1222,6 @@ window.buyOrEquipShopItem = async (itemId) => {
         return;
     }
 
-    // Unlockable equipment/decor
     if (!unlocked.includes(itemId)) {
         if (coins < item.price) {
             showToast("เหรียญไม่เพียงพอ", "error");
@@ -1159,7 +1234,6 @@ window.buyOrEquipShopItem = async (itemId) => {
         showToast(`ปลดล็อก ${item.name} สำเร็จ!`, "success");
     }
 
-    // Toggle Equip
     if (item.type === 'accessory') {
         pet.equippedAccessory = pet.equippedAccessory === item.icon ? '' : item.icon;
     } else if (item.type === 'decor') {
@@ -1185,14 +1259,12 @@ function renderPetUI() {
     const decorContainer = document.getElementById('pet-decor-display');
     decorContainer.innerHTML = (pet.equippedDecor || []).map(icon => `<span>${icon}</span>`).join('');
 
-    // Status evaluation
     let statusMsg = `${pet.name} กำลังอารมณ์ดีและคิดถึงพวกคุณ!`;
     if (pet.hunger < 30) statusMsg = `${pet.name} ท้องร้องแล้ว! รีบให้อาหารหน่อยนะ`;
     else if (pet.energy < 25) statusMsg = `${pet.name} ง่วงนอนมากเลย พาไปพักผ่อนเถอะ`;
     else if (pet.happiness > 85) statusMsg = `${pet.name} มีความสุขสุดๆ ที่ได้อยู่กับคุณสองคน!`;
     document.getElementById('pet-status-text').textContent = statusMsg;
 
-    // Bars
     document.getElementById('pet-stat-hunger').textContent = `${pet.hunger}%`;
     document.getElementById('pet-bar-hunger').style.width = `${pet.hunger}%`;
     document.getElementById('pet-stat-happy').textContent = `${pet.happiness}%`;
@@ -1200,7 +1272,6 @@ function renderPetUI() {
     document.getElementById('pet-stat-energy').textContent = `${pet.energy}%`;
     document.getElementById('pet-bar-energy').style.width = `${pet.energy}%`;
 
-    // Shop
     const unlocked = pet.unlockedItems || [];
     const shopGrid = document.getElementById('pet-shop-grid');
     shopGrid.innerHTML = SHOP_ITEMS.map(item => {
@@ -1235,7 +1306,6 @@ function renderAllUI() {
     if (!state.roomData) return;
     const { me, partner } = getPartnersInfo();
 
-    // Header
     document.getElementById('header-world-name').textContent = state.roomData.worldName || 'Our Little World';
     document.getElementById('header-room-code').textContent = state.roomId;
     document.getElementById('header-coins').textContent = state.roomData.coins || 0;
@@ -1262,12 +1332,10 @@ function renderDashboardUI() {
     if (!state.roomData) return;
     const { me, partner } = getPartnersInfo();
 
-    // Date & Greeting
     const todayFormatted = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     document.getElementById('dash-date').textContent = todayFormatted;
     document.getElementById('dash-greeting').textContent = `สวัสดี ${me.name}${partner ? ` & ${partner.name}` : ''}`;
 
-    // 1. Daily Us Preview
     const todayStr = getTodayDateString();
     const myToday = state.dailyLogs.find(l => l.date === todayStr && l.uid === me.uid);
     const partnerToday = partner ? state.dailyLogs.find(l => l.date === todayStr && l.uid === partner.uid) : null;
@@ -1287,7 +1355,6 @@ function renderDashboardUI() {
         </div>
     `;
 
-    // 2. Pet Preview
     const pet = state.roomData.pet;
     if (pet) {
         document.getElementById('dash-pet-name').textContent = pet.name;
@@ -1298,7 +1365,6 @@ function renderDashboardUI() {
         document.getElementById('dash-pet-happy-bar').style.width = `${pet.happiness}%`;
     }
 
-    // 3. Someday Preview
     const totalSomeday = state.somedayItems.length;
     const doneSomeday = state.somedayItems.filter(i => i.completed).length;
     const pctSomeday = totalSomeday === 0 ? 0 : Math.round((doneSomeday / totalSomeday) * 100);
@@ -1308,7 +1374,6 @@ function renderDashboardUI() {
         ? 'ยังไม่มีรายการสิ่งที่อยากทำด้วยกัน' 
         : `ทำสำเร็จแล้ว ${doneSomeday} จากทั้งหมด ${totalSomeday} รายการ`;
 
-    // 4. Quiz Preview
     const myScore = state.quizzes.filter(q => q.answeredByUid === me.uid && q.isCorrect).length;
     const partnerScore = partner ? state.quizzes.filter(q => q.answeredByUid === partner.uid && q.isCorrect).length : 0;
     const pendingQuiz = state.quizzes.filter(q => !q.answeredByUid && q.creatorUid !== me.uid).length;
@@ -1321,7 +1386,6 @@ function renderDashboardUI() {
         ? `มี ${pendingQuiz} คำถามใหม่รอให้คุณตอบ!` 
         : 'ทายใจกันผ่านคำถามสนุกๆ';
 
-    // 5. Activity Feed
     const actList = document.getElementById('dash-activity-list');
     if (state.activities.length === 0) {
         actList.innerHTML = `<p class="text-xs text-zinc-400">ยังไม่มีความเคลื่อนไหว</p>`;
@@ -1351,7 +1415,6 @@ window.navigateTo = (sectionId) => {
         }
     });
 
-    // Update Desktop Nav
     document.querySelectorAll('.nav-btn').forEach(btn => {
         if (btn.dataset.nav === sectionId) {
             btn.className = 'nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-zinc-900 text-white';
@@ -1360,7 +1423,6 @@ window.navigateTo = (sectionId) => {
         }
     });
 
-    // Update Mobile Nav
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
         if (btn.dataset.nav === sectionId) {
             btn.classList.replace('text-zinc-400', 'text-zinc-900');
