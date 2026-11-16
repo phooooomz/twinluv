@@ -2,8 +2,8 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // 1. Supabase Initialization
 // Cloudflare Pages: ใส่ค่าจาก Supabase Dashboard > Project Settings > API
-const SUPABASE_URL = 'https://YOUR_PROJECT_REF.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://vpybtmzoezjcajzcvwfd.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_WO9uj7HXQZCXKrKH5_cHMw_F3pGVjh5';
 const isConfigured = !SUPABASE_URL.includes('YOUR_PROJECT_REF') && !SUPABASE_ANON_KEY.startsWith('YOUR_');
 
 let supabase = null;
