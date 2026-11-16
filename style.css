@@ -1,43 +1,36 @@
 body {
-    font-family: 'Inter', 'Noto Sans Thai', sans-serif;
-    background-color: #FAFAFA;
-    color: #111111;
-    -webkit-tap-highlight-color: transparent;
+font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+background-color: #FAFAFA;
+color: #111111;
+-webkit-tap-highlight-color: transparent;
 }
-/* Minimalist Scrollbar */
+/* Minimalist Scrollbar /
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+width: 6px;
+height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: #F4F4F5;
+background: #F4F4F5;
 }
 ::-webkit-scrollbar-thumb {
-    background: #D4D4D8;
-    border-radius: 9999px;
+background: #D4D4D8;
+border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #A1A1AA;
+background: #A1A1AA;
 }
-/* Subtle Animations */
+/ Subtle Animations */
 @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-6px); }
+0%, 100% { transform: translateY(0px); }
+50% { transform: translateY(-6px); }
 }
 .animate-float {
-    animation: float 3.5s ease-in-out infinite;
-}
-@keyframes pulse-subtle {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-.animate-pulse-subtle {
-    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+animation: float 3.5s ease-in-out infinite;
 }
 .fade-in {
-    animation: fadeIn 0.25s ease-out forwards;
+animation: fadeIn 0.25s ease-out forwards;
 }
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+from { opacity: 0; transform: translateY(4px); }
+to { opacity: 1; transform: translateY(0); }
 }

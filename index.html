@@ -1,646 +1,320 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Together – Our Little World</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & Noto Sans Thai -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Together – Our Little World</title>
+<!-- PWA & Mobile Web App Meta -->
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Together">
+<!-- App Icon (Embedded SVG for zero missing asset issues) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='115' fill='%23111111'/><path d='M160 256c0-35.3 28.7-64 64-64s64 28.7 64 64-28.7 64-64 64-64-28.7-64-64zm128 0c0-35.3 28.7-64 64-64s64 28.7 64 64-28.7 64-64 64-64-28.7-64-64z' fill='none'/><path d='M170 192c-39.8 0-72 32.2-72 72s32.2 72 72 72c26.5 0 49.6-14.3 62-35.6 12.4 21.3 35.5 35.6 62 35.6 39.8 0 72-32.2 72-72s-32.2-72-72-72c-23.7 0-44.6 11.6-58 29.4C214.6 203.6 193.7 192 170 192z' fill='%23ffffff'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='115' fill='%23111111'/><path d='M170 192c-39.8 0-72 32.2-72 72s32.2 72 72 72c26.5 0 49.6-14.3 62-35.6 12.4 21.3 35.5 35.6 62 35.6 39.8 0 72-32.2 72-72s-32.2-72-72-72c-23.7 0-44.6 11.6-58 29.4C214.6 203.6 193.7 192 170 192z' fill='%23ffffff'/></svg>">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Google Fonts: Inter & Noto Sans Thai -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body class="min-h-screen flex flex-col selection:bg-zinc-900 selection:text-white">
-
-    <!-- Global Toast Notification Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
-
-    <!-- Custom Modal Container -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4 transition-opacity">
-        <div id="modal-content" class="bg-white border border-zinc-200 rounded-2xl max-w-md w-full p-6 shadow-sm fade-in">
-            <!-- Dynamic Modal Content -->
-        </div>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6">
-        <div class="w-10 h-10 border-2 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-4"></div>
-        <p class="text-sm font-medium text-zinc-600 tracking-wide">กำลังเชื่อมต่อโลกของเราสองคน...</p>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- VIEW 1: ONBOARDING / ROOM CONNECTION       -->
-    <!-- ========================================== -->
-    <div id="view-auth" class="hidden min-h-screen flex items-center justify-center p-4 bg-zinc-50">
-        <div class="max-w-md w-full bg-white border border-zinc-200 rounded-3xl p-8">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-900 text-white mb-4">
-                    <i data-lucide="infinity" class="w-6 h-6"></i>
-                </div>
-                <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Together</h1>
-                <p class="text-sm text-zinc-500 mt-1">Our Little World • พื้นที่ส่วนตัวของเราสองคน</p>
-            </div>
-
-            <!-- Profile Name Input -->
-            <div class="mb-6">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">ชื่อเรียกของคุณ (Display Name)</label>
-                <input type="text" id="auth-name" placeholder="เช่น เธอ, เค้า, หรือชื่อเล่นของคุณ" 
-                    class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
-            </div>
-
-            <!-- Tabs: Create Room vs Join Room -->
-            <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-100 rounded-xl mb-6">
-                <button id="tab-create-room" onclick="switchAuthTab('create')" class="py-2 text-xs font-semibold rounded-lg bg-white text-zinc-900 shadow-2xs transition-all">สร้างห้องใหม่</button>
-                <button id="tab-join-room" onclick="switchAuthTab('join')" class="py-2 text-xs font-semibold rounded-lg text-zinc-500 hover:text-zinc-900 transition-all">เข้าร่วมด้วยรหัส</button>
-            </div>
-
-            <!-- Create Room Panel -->
-            <div id="panel-create-room" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">ชื่อพื้นที่ของเรา (World Name)</label>
-                    <input type="text" id="auth-world-name" placeholder="เช่น บ้านของเรา, 24/7 Together" 
-                        class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
-                </div>
-                <button onclick="handleCreateRoom()" class="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2">
-                    <span>สร้างพื้นที่ส่วนตัว</span>
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <!-- Join Room Panel -->
-            <div id="panel-join-room" class="hidden space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">รหัสห้อง 6 หลัก (Invite Code)</label>
-                    <input type="text" id="auth-invite-code" maxlength="6" placeholder="เช่น A7X9B2" 
-                        class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm uppercase tracking-widest font-mono focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
-                </div>
-                <button onclick="handleJoinRoom()" class="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2">
-                    <span>เชื่อมต่อกับคนพิเศษ</span>
-                    <i data-lucide="link" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <div class="mt-6 pt-6 border-t border-zinc-100 text-center">
-                <p class="text-xs text-zinc-400">ข้อมูลทั้งหมดถูกเข้ารหัสและซิงก์แบบเรียลไทม์เฉพาะคุณสองคน</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- VIEW 2: MAIN APPLICATION                   -->
-    <!-- ========================================== -->
-    <div id="view-app" class="hidden flex-1 flex flex-col max-w-5xl w-full mx-auto pb-24 md:pb-8">
-        
-        <!-- Top Navigation Header -->
-        <header class="sticky top-0 z-30 bg-[#FAFAFA]/90 backdrop-blur-md border-b border-zinc-200/80 px-4 sm:px-6 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-zinc-900 text-white flex items-center justify-center shrink-0">
-                    <i data-lucide="infinity" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 id="header-world-name" class="font-bold text-sm sm:text-base text-zinc-900 tracking-tight">Our Little World</h1>
-                        <span id="partner-status-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> รออีกฝ่ายเข้าร่วม
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-zinc-500">
-                        <span>รหัสห้อง: <strong id="header-room-code" class="font-mono text-zinc-800 select-all">------</strong></span>
-                        <button onclick="copyInviteCode()" class="text-zinc-400 hover:text-zinc-900 transition-colors" title="คัดลอกรหัส">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Shared Coins Badge -->
-                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-800">
-                    <i data-lucide="coins" class="w-3.5 h-3.5 text-zinc-500"></i>
-                    <span id="header-coins">0</span>
-                </div>
-                <!-- Notifications Bell -->
-                <button onclick="openActivityModal()" class="relative p-2 rounded-xl bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 transition-colors">
-                    <i data-lucide="bell" class="w-4 h-4"></i>
-                    <span id="notif-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-zinc-900"></span>
-                </button>
-                <!-- Leave / Settings -->
-                <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 transition-colors">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- Desktop Navigation Bar -->
-        <nav class="hidden md:flex items-center gap-2 px-6 pt-6 pb-2">
-            <button onclick="navigateTo('dashboard')" data-nav="dashboard" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-zinc-900 text-white">
-                <i data-lucide="layout-grid" class="w-4 h-4"></i> ภาพรวม (Dashboard)
-            </button>
-            <button onclick="navigateTo('daily')" data-nav="daily" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60">
-                <i data-lucide="heart-pulse" class="w-4 h-4"></i> Daily Us
-            </button>
-            <button onclick="navigateTo('someday')" data-nav="someday" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60">
-                <i data-lucide="compass" class="w-4 h-4"></i> Someday Together
-            </button>
-            <button onclick="navigateTo('quiz')" data-nav="quiz" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60">
-                <i data-lucide="sparkles" class="w-4 h-4"></i> How Well Do You Know Me?
-            </button>
-            <button onclick="navigateTo('pet')" data-nav="pet" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60">
-                <i data-lucide="cat" class="w-4 h-4"></i> Two Little Pets
-            </button>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 px-4 sm:px-6 py-4 sm:py-6">
-
-            <!-- ========================================== -->
-            <!-- SECTION 0: DASHBOARD                       -->
-            <!-- ========================================== -->
-            <section id="sec-dashboard" class="space-y-6 fade-in">
-                <!-- Welcome & Connection Banner -->
-                <div class="bg-white border border-zinc-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider" id="dash-date">วันนี้</p>
-                        <h2 class="text-xl font-bold text-zinc-900 mt-1" id="dash-greeting">สวัสดี, ยินดีต้อนรับกลับบ้าน</h2>
-                        <p class="text-sm text-zinc-500 mt-1" id="dash-subtext">ระยะทางเป็นเพียงตัวเลข เมื่อใจเราเชื่อมต่อกันเสมอ</p>
-                    </div>
-                    <div id="dash-invite-box" class="bg-zinc-50 border border-zinc-200 rounded-xl p-3.5 flex items-center justify-between gap-4">
-                        <div>
-                            <p class="text-[11px] font-medium text-zinc-500">แชร์รหัสนี้ให้อีกฝ่าย</p>
-                            <p class="text-lg font-mono font-bold tracking-widest text-zinc-900" id="dash-code-display">------</p>
-                        </div>
-                        <button onclick="copyInviteCode()" class="px-3 py-2 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition-colors">
-                            คัดลอก
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 4 Feature Summary Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
-                    <!-- Card 1: Daily Us -->
-                    <div onclick="navigateTo('daily')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
-                                        <i data-lucide="heart-pulse" class="w-4 h-4"></i>
-                                    </div>
-                                    <h3 class="font-semibold text-zinc-900">Daily Us</h3>
-                                </div>
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3" id="dash-daily-preview">
-                                <!-- Populated by JS -->
-                            </div>
-                        </div>
-                        <p class="text-xs text-zinc-400 mt-4 pt-3 border-t border-zinc-100">แตะเพื่อเช็กอินความรู้สึกและเขียนบันทึกวันนี้</p>
-                    </div>
-
-                    <!-- Card 2: Two Little Pets -->
-                    <div onclick="navigateTo('pet')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
-                                        <i data-lucide="cat" class="w-4 h-4"></i>
-                                    </div>
-                                    <h3 class="font-semibold text-zinc-900" id="dash-pet-name">Two Little Pets</h3>
-                                </div>
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-3xl animate-float" id="dash-pet-avatar">
-                                    🐱
-                                </div>
-                                <div class="flex-1 space-y-2">
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-zinc-500">ความอิ่ม</span>
-                                            <span class="font-medium text-zinc-900" id="dash-pet-hunger">80%</span>
-                                        </div>
-                                        <div class="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                                            <div id="dash-pet-hunger-bar" class="h-full bg-zinc-900 rounded-full" style="width: 80%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-zinc-500">ความสุข</span>
-                                            <span class="font-medium text-zinc-900" id="dash-pet-happy">80%</span>
-                                        </div>
-                                        <div class="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                                            <div id="dash-pet-happy-bar" class="h-full bg-zinc-900 rounded-full" style="width: 80%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-zinc-400 mt-4 pt-3 border-t border-zinc-100">ช่วยกันดูแลให้อาหารและเล่นกับเจ้าตัวน้อย</p>
-                    </div>
-
-                    <!-- Card 3: Someday Together -->
-                    <div onclick="navigateTo('someday')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
-                                        <i data-lucide="compass" class="w-4 h-4"></i>
-                                    </div>
-                                    <h3 class="font-semibold text-zinc-900">Someday Together</h3>
-                                </div>
-                                <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-900" id="dash-someday-percent">0%</span>
-                            </div>
-                            <p class="text-sm text-zinc-600 mb-3" id="dash-someday-summary">ยังไม่มีรายการสิ่งที่อยากทำด้วยกัน</p>
-                            <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                                <div id="dash-someday-bar" class="h-full bg-zinc-900 rounded-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-zinc-400 mt-4 pt-3 border-t border-zinc-100">วางแผนสถานที่ หนัง อาหาร และกิจกรรมในอนาคต</p>
-                    </div>
-
-                    <!-- Card 4: How Well Do You Know Me? -->
-                    <div onclick="navigateTo('quiz')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
-                                        <i data-lucide="sparkles" class="w-4 h-4"></i>
-                                    </div>
-                                    <h3 class="font-semibold text-zinc-900">How Well Do You Know Me?</h3>
-                                </div>
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
-                            </div>
-                            <div class="flex items-center justify-between bg-zinc-50 border border-zinc-100 rounded-xl p-3">
-                                <div class="text-center flex-1">
-                                    <p class="text-xs text-zinc-500" id="dash-score-p1-name">คุณ</p>
-                                    <p class="text-lg font-bold text-zinc-900" id="dash-score-p1">0</p>
-                                </div>
-                                <div class="text-xs font-mono text-zinc-300">VS</div>
-                                <div class="text-center flex-1">
-                                    <p class="text-xs text-zinc-500" id="dash-score-p2-name">คนพิเศษ</p>
-                                    <p class="text-lg font-bold text-zinc-900" id="dash-score-p2">0</p>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-zinc-400 mt-4 pt-3 border-t border-zinc-100" id="dash-quiz-status">ทายใจกันผ่านคำถามสนุกๆ</p>
-                    </div>
-
-                </div>
-
-                <!-- Recent Activity Feed -->
-                <div class="bg-white border border-zinc-200 rounded-2xl p-5">
-                    <h3 class="text-sm font-semibold text-zinc-900 mb-3 flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-zinc-500"></i> ความเคลื่อนไหวล่าสุด
-                    </h3>
-                    <div id="dash-activity-list" class="space-y-2.5 text-sm">
-                        <p class="text-xs text-zinc-400">ยังไม่มีความเคลื่อนไหว</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ========================================== -->
-            <!-- SECTION 1: DAILY US                        -->
-            <!-- ========================================== -->
-            <section id="sec-daily" class="hidden space-y-6 fade-in">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                        <h2 class="text-xl font-bold text-zinc-900">Daily Us</h2>
-                        <p class="text-sm text-zinc-500">เช็กอินความรู้สึกและฝากข้อความถึงกันในทุกๆ วัน</p>
-                    </div>
-                </div>
-
-                <!-- Today's Check-in Status (Both Partners) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="daily-today-cards">
-                    <!-- Populated dynamically -->
-                </div>
-
-                <!-- Check-in Form -->
-                <div class="bg-white border border-zinc-200 rounded-2xl p-6">
-                    <h3 class="text-sm font-semibold text-zinc-900 mb-4">บันทึกความรู้สึกของคุณวันนี้</h3>
-                    
-                    <!-- Mood Selector -->
-                    <div class="grid grid-cols-5 gap-2 sm:gap-3 mb-5" id="mood-selector">
-                        <button type="button" onclick="selectMood('happy')" data-mood="happy" class="mood-btn flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 hover:border-zinc-900 transition-all">
-                            <span class="text-2xl">😊</span>
-                            <span class="text-xs font-medium text-zinc-700">มีความสุข</span>
-                        </button>
-                        <button type="button" onclick="selectMood('miss')" data-mood="miss" class="mood-btn flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 hover:border-zinc-900 transition-all">
-                            <span class="text-2xl">🥺</span>
-                            <span class="text-xs font-medium text-zinc-700">คิดถึง</span>
-                        </button>
-                        <button type="button" onclick="selectMood('normal')" data-mood="normal" class="mood-btn flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 hover:border-zinc-900 transition-all">
-                            <span class="text-2xl">😌</span>
-                            <span class="text-xs font-medium text-zinc-700">ปกติ</span>
-                        </button>
-                        <button type="button" onclick="selectMood('tired')" data-mood="tired" class="mood-btn flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 hover:border-zinc-900 transition-all">
-                            <span class="text-2xl">😫</span>
-                            <span class="text-xs font-medium text-zinc-700">เหนื่อย</span>
-                        </button>
-                        <button type="button" onclick="selectMood('sad')" data-mood="sad" class="mood-btn flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 hover:border-zinc-900 transition-all">
-                            <span class="text-2xl">😢</span>
-                            <span class="text-xs font-medium text-zinc-700">เศร้า</span>
-                        </button>
-                    </div>
-
-                    <!-- Note Input -->
-                    <div class="mb-4">
-                        <textarea id="daily-note-input" rows="3" placeholder="วันนี้เป็นยังไงบ้าง? เล่าให้อีกฝ่ายฟังหน่อย..." 
-                            class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors resize-none"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-zinc-400">+15 เหรียญเมื่อเช็กอินประจำวัน</span>
-                        <button onclick="submitDailyCheckin()" class="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors">
-                            บันทึกความรู้สึก
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Mood Calendar & History -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Calendar -->
-                    <div class="bg-white border border-zinc-200 rounded-2xl p-5">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-semibold text-zinc-900" id="calendar-month-label">ปฏิทินอารมณ์</h3>
-                            <div class="flex gap-1">
-                                <button onclick="changeCalendarMonth(-1)" class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-600">
-                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="changeCalendarMonth(1)" class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-600">
-                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-zinc-400 mb-2">
-                            <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-                        </div>
-                        <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <!-- History Timeline -->
-                    <div class="lg:col-span-2 bg-white border border-zinc-200 rounded-2xl p-5">
-                        <h3 class="text-sm font-semibold text-zinc-900 mb-4">ประวัติการเช็กอินย้อนหลัง</h3>
-                        <div id="daily-history-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ========================================== -->
-            <!-- SECTION 2: SOMEDAY TOGETHER                -->
-            <!-- ========================================== -->
-            <section id="sec-someday" class="hidden space-y-6 fade-in">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold text-zinc-900">Someday Together</h2>
-                        <p class="text-sm text-zinc-500">รายการความฝันและสิ่งที่เราจะทำด้วยกันเมื่อได้เจอกัน</p>
-                    </div>
-                    <button onclick="openSomedayModal()" class="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
-                        <i data-lucide="plus" class="w-4 h-4"></i> เพิ่มรายการใหม่
-                    </button>
-                </div>
-
-                <!-- Progress Overview -->
-                <div class="bg-white border border-zinc-200 rounded-2xl p-5">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-zinc-700">ความสำเร็จของเราสองคน</span>
-                        <span class="text-sm font-bold text-zinc-900" id="someday-stats-text">0 / 0 สำเร็จ (0%)</span>
-                    </div>
-                    <div class="w-full h-2.5 bg-zinc-100 rounded-full overflow-hidden">
-                        <div id="someday-progress-bar" class="h-full bg-zinc-900 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Category Filter -->
-                <div class="flex items-center gap-2 overflow-x-auto pb-1">
-                    <button onclick="filterSomeday('all')" data-filter="all" class="someday-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-zinc-900 text-white shrink-0">ทั้งหมด</button>
-                    <button onclick="filterSomeday('place')" data-filter="place" class="someday-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 shrink-0">📍 สถานที่อยากไป</button>
-                    <button onclick="filterSomeday('food')" data-filter="food" class="someday-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 shrink-0">🍜 อาหารที่อยากกิน</button>
-                    <button onclick="filterSomeday('movie')" data-filter="movie" class="someday-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 shrink-0">🎬 หนัง/ซีรีส์</button>
-                    <button onclick="filterSomeday('activity')" data-filter="activity" class="someday-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 shrink-0">✨ กิจกรรม</button>
-                </div>
-
-                <!-- Bucket List Grid -->
-                <div id="someday-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Populated by JS -->
-                </div>
-            </section>
-
-            <!-- ========================================== -->
-            <!-- SECTION 3: HOW WELL DO YOU KNOW ME?        -->
-            <!-- ========================================== -->
-            <section id="sec-quiz" class="hidden space-y-6 fade-in">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold text-zinc-900">How Well Do You Know Me?</h2>
-                        <p class="text-sm text-zinc-500">ผลัดกันตั้งคำถามและทายใจดูว่าเราเข้าใจกันมากแค่ไหน</p>
-                    </div>
-                    <button onclick="openCreateQuizModal()" class="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
-                        <i data-lucide="help-circle" class="w-4 h-4"></i> ตั้งคำถามทายใจ
-                    </button>
-                </div>
-
-                <!-- Scoreboard -->
-                <div class="bg-white border border-zinc-200 rounded-2xl p-6">
-                    <div class="grid grid-cols-3 items-center text-center">
-                        <div>
-                            <div class="w-12 h-12 rounded-2xl bg-zinc-900 text-white mx-auto flex items-center justify-center font-bold text-lg mb-2" id="quiz-p1-avatar">P1</div>
-                            <p class="text-sm font-semibold text-zinc-900 truncate" id="quiz-p1-name">คุณ</p>
-                            <p class="text-2xl font-bold text-zinc-900 mt-1" id="quiz-p1-score">0 <span class="text-xs font-normal text-zinc-400">คะแนน</span></p>
-                        </div>
-                        <div class="flex flex-col items-center">
-                            <span class="px-3 py-1 rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600">SCOREBOARD</span>
-                        </div>
-                        <div>
-                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 text-zinc-800 mx-auto flex items-center justify-center font-bold text-lg mb-2" id="quiz-p2-avatar">P2</div>
-                            <p class="text-sm font-semibold text-zinc-900 truncate" id="quiz-p2-name">คนพิเศษ</p>
-                            <p class="text-2xl font-bold text-zinc-900 mt-1" id="quiz-p2-score">0 <span class="text-xs font-normal text-zinc-400">คะแนน</span></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Active Questions Waiting for Answer -->
-                <div class="space-y-3">
-                    <h3 class="text-sm font-semibold text-zinc-900">คำถามที่รอคำตอบ</h3>
-                    <div id="quiz-active-list" class="space-y-3">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Quiz History -->
-                <div class="space-y-3">
-                    <h3 class="text-sm font-semibold text-zinc-900">ประวัติการเล่นที่ผ่านมา</h3>
-                    <div id="quiz-history-list" class="space-y-3">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- ========================================== -->
-            <!-- SECTION 4: TWO LITTLE PETS                 -->
-            <!-- ========================================== -->
-            <section id="sec-pet" class="hidden space-y-6 fade-in">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-xl font-bold text-zinc-900">Two Little Pets</h2>
-                        <p class="text-sm text-zinc-500">สัตว์เลี้ยงตัวน้อยที่เราสองคนช่วยกันดูแล</p>
-                    </div>
-                    <button onclick="openRenamePetModal()" class="px-3.5 py-2 bg-white border border-zinc-200 hover:border-zinc-900 text-xs font-medium rounded-xl transition-colors flex items-center gap-1.5">
-                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> เปลี่ยนชื่อ
-                    </button>
-                </div>
-
-                <!-- Pet Habitat Card -->
-                <div class="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden">
-                    <!-- Room Decor Display -->
-                    <div class="flex justify-center gap-4 text-2xl mb-2 opacity-80" id="pet-decor-display">
-                        <!-- Unlocked/Equipped decor appears here -->
-                    </div>
-
-                    <!-- Pet Character -->
-                    <div class="my-6 inline-flex flex-col items-center">
-                        <div id="pet-character" class="w-32 h-32 rounded-full bg-zinc-50 border border-zinc-200 flex items-center justify-center text-6xl animate-float select-none relative">
-                            <span id="pet-emoji">🐱</span>
-                            <span id="pet-accessory-badge" class="absolute -top-2 -right-2 text-2xl"></span>
-                        </div>
-                        <div class="mt-4">
-                            <h3 id="pet-name-display" class="text-lg font-bold text-zinc-900">เจ้าตัวน้อย</h3>
-                            <p id="pet-status-text" class="text-xs font-medium text-zinc-500 mt-0.5">กำลังอารมณ์ดีและคิดถึงพวกคุณ!</p>
-                        </div>
-                    </div>
-
-                    <!-- 3 Status Bars -->
-                    <div class="max-w-md mx-auto grid grid-cols-3 gap-4 text-left mt-6 pt-6 border-t border-zinc-100">
-                        <div>
-                            <div class="flex justify-between text-xs mb-1.5">
-                                <span class="text-zinc-500 font-medium">ความอิ่ม</span>
-                                <span class="font-bold text-zinc-900" id="pet-stat-hunger">80%</span>
-                            </div>
-                            <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                                <div id="pet-bar-hunger" class="h-full bg-zinc-900 rounded-full transition-all duration-300" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1.5">
-                                <span class="text-zinc-500 font-medium">ความสุข</span>
-                                <span class="font-bold text-zinc-900" id="pet-stat-happy">80%</span>
-                            </div>
-                            <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                                <div id="pet-bar-happy" class="h-full bg-zinc-900 rounded-full transition-all duration-300" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1.5">
-                                <span class="text-zinc-500 font-medium">พลังงาน</span>
-                                <span class="font-bold text-zinc-900" id="pet-stat-energy">80%</span>
-                            </div>
-                            <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                                <div id="pet-bar-energy" class="h-full bg-zinc-900 rounded-full transition-all duration-300" style="width: 80%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Care Actions -->
-                    <div class="max-w-md mx-auto grid grid-cols-3 gap-3 mt-6">
-                        <button onclick="interactPet('feed')" class="p-3 rounded-2xl border border-zinc-200 hover:border-zinc-900 hover:bg-zinc-50 transition-all flex flex-col items-center gap-1">
-                            <span class="text-xl">🐟</span>
-                            <span class="text-xs font-semibold text-zinc-900">ให้อาหาร</span>
-                            <span class="text-[10px] text-zinc-400">-10 เหรียญ</span>
-                        </button>
-                        <button onclick="interactPet('play')" class="p-3 rounded-2xl border border-zinc-200 hover:border-zinc-900 hover:bg-zinc-50 transition-all flex flex-col items-center gap-1">
-                            <span class="text-xl">🧶</span>
-                            <span class="text-xs font-semibold text-zinc-900">เล่นด้วย</span>
-                            <span class="text-[10px] text-zinc-400">+5 เหรียญ</span>
-                        </button>
-                        <button onclick="interactPet('sleep')" class="p-3 rounded-2xl border border-zinc-200 hover:border-zinc-900 hover:bg-zinc-50 transition-all flex flex-col items-center gap-1">
-                            <span class="text-xl">💤</span>
-                            <span class="text-xs font-semibold text-zinc-900">ให้นอนพัก</span>
-                            <span class="text-[10px] text-zinc-400">เพิ่มพลังงาน</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Pet Shop / Unlockables -->
-                <div class="bg-white border border-zinc-200 rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-sm font-semibold text-zinc-900">ร้านค้าของตกแต่ง & ไอเทม</h3>
-                            <p class="text-xs text-zinc-500">ใช้เหรียญที่สะสมร่วมกันเพื่อปลดล็อกไอเทมให้สัตว์เลี้ยง</p>
-                        </div>
-                        <div class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-zinc-100 text-zinc-900">
-                            คงเหลือ: <span id="shop-coins-display">0</span> เหรียญ
-                        </div>
-                    </div>
-                    <div id="pet-shop-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <!-- Mobile Bottom Navigation Bar -->
-        <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200 px-2 py-2 flex items-center justify-around">
-            <button onclick="navigateTo('dashboard')" data-nav="dashboard" class="mobile-nav-btn flex flex-col items-center gap-1 p-1.5 rounded-xl text-zinc-900">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">ภาพรวม</span>
-            </button>
-            <button onclick="navigateTo('daily')" data-nav="daily" class="mobile-nav-btn flex flex-col items-center gap-1 p-1.5 rounded-xl text-zinc-400">
-                <i data-lucide="heart-pulse" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">Daily Us</span>
-            </button>
-            <button onclick="navigateTo('someday')" data-nav="someday" class="mobile-nav-btn flex flex-col items-center gap-1 p-1.5 rounded-xl text-zinc-400">
-                <i data-lucide="compass" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">Someday</span>
-            </button>
-            <button onclick="navigateTo('quiz')" data-nav="quiz" class="mobile-nav-btn flex flex-col items-center gap-1 p-1.5 rounded-xl text-zinc-400">
-                <i data-lucide="sparkles" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">ทายใจ</span>
-            </button>
-            <button onclick="navigateTo('pet')" data-nav="pet" class="mobile-nav-btn flex flex-col items-center gap-1 p-1.5 rounded-xl text-zinc-400">
-                <i data-lucide="cat" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">สัตว์เลี้ยง</span>
-            </button>
-        </nav>
-
-    </div>
-
-    <!-- ========================================== -->
-    <!-- SUPABASE & APPLICATION LOGIC               -->
-    <!-- ========================================== -->
-    <!-- Boot error reporter: shows the real cause on the loading screen if app.js fails -->
-    <script>
-    (function () {
-        function show(msg) {
-            var el = document.getElementById('loading-screen');
-            if (!el || el.classList.contains('hidden')) return;
-            var p = document.getElementById('boot-error');
-            if (!p) {
-                p = document.createElement('pre');
-                p.id = 'boot-error';
-                p.style.cssText = 'margin-top:16px;max-width:90%;white-space:pre-wrap;word-break:break-word;font-size:11px;color:#b91c1c;text-align:left';
-                el.appendChild(p);
-            }
-            p.textContent += msg + '\n';
-        }
-        window.addEventListener('error', function (e) {
-            var t = e.target;
-            if (t && (t.src || t.href)) show('โหลดไฟล์ไม่ได้: ' + (t.src || t.href));
-            else show('Error: ' + e.message);
-        }, true);
-        window.addEventListener('unhandledrejection', function (e) {
-            show('Error: ' + ((e.reason && e.reason.message) || e.reason));
-        });
-        setTimeout(function () { show('ยังโหลดไม่เสร็จหลัง 10 วินาที (app.js อาจไม่ทำงาน)'); }, 10000);
-    })();
-    </script>
-    <script type="module" src="app.js"></script>
-</body>
-</html>
+<!-- Global Toast Notification Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+<!-- Custom Modal Container -->
+<div id="modal-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4 transition-opacity">
+<div id="modal-content" class="bg-white border border-zinc-200 rounded-2xl max-w-md w-full p-6 shadow-sm fade-in">
+<!-- Dynamic Modal Content -->
+</div>
+</div>
+<!-- Loading Overlay -->
+<div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6">
+<div class="w-10 h-10 border-2 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-4"></div>
+<p class="text-sm font-medium text-zinc-600 tracking-wide">กำลังเชื่อมต่อโลกของเราสองคน...</p>
+</div>
+<!-- ========================================== -->
+<!-- VIEW 1: ONBOARDING / ROOM CONNECTION       -->
+<!-- ========================================== -->
+<div id="view-auth" class="hidden min-h-screen flex items-center justify-center p-4 bg-zinc-50">
+<div class="max-w-md w-full bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
+<div class="text-center mb-8">
+<!-- App Icon Preview Box -->
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-900 text-white mb-4 shadow-md">
+<svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M17 19H7a4 4 0 0 1-4-4v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2a4 4 0 0 1-4 4z"></path>
+<path d="M12 11V7a2 2 0 0 1 2-2h2"></path>
+<path d="M8 15h.01"></path>
+<path d="M16 15h.01"></path>
+</svg>
+</div>
+<h1 class="text-2xl font-bold tracking-tight text-zinc-900">Together</h1>
+<p class="text-sm text-zinc-500 mt-1">Our Little World • พื้นที่ส่วนตัวของเราสองคน</p>
+</div>
+<!-- Profile Name Input -->
+<div class="mb-6">
+<label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">ชื่อเรียกของคุณ (Display Name)</label>
+<input type="text" id="auth-name" placeholder="เช่น เธอ, เค้า, หรือชื่อเล่นของคุณ" 
+class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
+</div>
+<!-- Tabs: Create Room vs Join Room -->
+<div class="grid grid-cols-2 gap-2 p-1 bg-zinc-100 rounded-xl mb-6">
+<button id="tab-create-room" onclick="switchAuthTab('create')" class="py-2 text-xs font-semibold rounded-lg bg-white text-zinc-900 shadow-2xs transition-all">สร้างห้องใหม่</button>
+<button id="tab-join-room" onclick="switchAuthTab('join')" class="py-2 text-xs font-semibold rounded-lg text-zinc-500 hover:text-zinc-900 transition-all">เข้าร่วมด้วยรหัส</button>
+</div>
+<!-- Create Room Panel -->
+<div id="panel-create-room" class="space-y-4">
+<div>
+<label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">ชื่อพื้นที่ของเรา (World Name)</label>
+<input type="text" id="auth-world-name" placeholder="เช่น บ้านของเรา, 24/7 Together" 
+class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
+</div>
+<button onclick="handleCreateRoom()" class="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2">
+<span>สร้างพื้นที่ส่วนตัว</span>
+<i data-lucide="arrow-right" class="w-4 h-4"></i>
+</button>
+</div>
+<!-- Join Room Panel -->
+<div id="panel-join-room" class="hidden space-y-4">
+<div>
+<label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">รหัสห้อง 6 หลัก (Invite Code)</label>
+<input type="text" id="auth-invite-code" maxlength="6" placeholder="เช่น A7X9B2" 
+class="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50/50 text-sm uppercase tracking-widest font-mono focus:outline-none focus:border-zinc-900 focus:bg-white transition-colors">
+</div>
+<button onclick="handleJoinRoom()" class="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2">
+<span>เชื่อมต่อกับคนพิเศษ</span>
+<i data-lucide="link" class="w-4 h-4"></i>
+</button>
+</div>
+<!-- Install App / PWA Download Prompt in Auth -->
+<div class="mt-6 pt-6 border-t border-zinc-100 flex flex-col items-center gap-2">
+<button onclick="openInstallInstructions()" class="w-full py-2.5 px-4 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 flex items-center justify-center gap-2 transition-colors">
+<i data-lucide="download" class="w-4 h-4"></i> ติดตั้งแอปบนหน้าจอมือถือ (Android / iOS)
+</button>
+<p class="text-[11px] text-zinc-400 text-center">ข้อมูลทั้งหมดซิงก์เรียลไทม์เฉพาะคุณสองคน</p>
+</div>
+</div>
+</div>
+<!-- ========================================== -->
+<!-- VIEW 2: MAIN APPLICATION                   -->
+<!-- ========================================== -->
+<div id="view-app" class="hidden flex-1 flex flex-col max-w-5xl w-full mx-auto pb-24 md:pb-8">
+<!-- Top Navigation Header -->
+<header class="sticky top-0 z-30 bg-[#FAFAFA]/95 backdrop-blur-md border-b border-zinc-200/80 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-zinc-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+<i data-lucide="infinity" class="w-5 h-5"></i>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h1 id="header-world-name" class="font-bold text-sm sm:text-base text-zinc-900 tracking-tight">Our Little World</h1>
+<span id="partner-status-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
+<span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> รออีกฝ่ายเข้าร่วม
+</span>
+</div>
+<div class="flex items-center gap-2 text-xs text-zinc-500">
+<span>รหัสห้อง: <strong id="header-room-code" class="font-mono text-zinc-800 select-all">------</strong></span>
+<button onclick="copyInviteCode()" class="text-zinc-400 hover:text-zinc-900 transition-colors" title="คัดลอกรหัส">
+<i data-lucide="copy" class="w-3.5 h-3.5"></i>
+</button>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 sm:gap-3">
+<!-- Shared Coins Badge -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-800 shadow-2xs">
+<i data-lucide="coins" class="w-3.5 h-3.5 text-zinc-500"></i>
+<span id="header-coins">0</span>
+</div>
+<!-- Notifications Bell -->
+<button onclick="openActivityModal()" class="relative p-2 rounded-xl bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs">
+<i data-lucide="bell" class="w-4 h-4"></i>
+<span id="notif-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-zinc-900"></span>
+</button>
+<!-- Install App Button -->
+<button onclick="openInstallInstructions()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors shadow-2xs" title="ติดตั้งแอป">
+<i data-lucide="download" class="w-3.5 h-3.5"></i> ติดตั้งแอป
+</button>
+<!-- Leave / Settings -->
+<button onclick="openSettingsModal()" class="p-2 rounded-xl bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs">
+<i data-lucide="settings" class="w-4 h-4"></i>
+</button>
+</div>
+</header>
+<!-- Desktop Navigation Bar -->
+<nav class="hidden md:flex items-center gap-2 px-6 pt-6 pb-2 overflow-x-auto">
+<button onclick="navigateTo('dashboard')" data-nav="dashboard" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-zinc-900 text-white shrink-0">
+<i data-lucide="layout-grid" class="w-4 h-4"></i> ภาพรวม
+</button>
+<button onclick="navigateTo('chat')" data-nav="chat" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60 shrink-0 relative">
+<i data-lucide="message-circle" class="w-4 h-4"></i> ห้องแชตคู่รัก
+<span id="chat-badge-dot" class="hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span>
+</button>
+<button onclick="navigateTo('daily')" data-nav="daily" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60 shrink-0">
+<i data-lucide="heart-pulse" class="w-4 h-4"></i> Daily Us
+</button>
+<button onclick="navigateTo('someday')" data-nav="someday" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60 shrink-0">
+<i data-lucide="compass" class="w-4 h-4"></i> Someday Together
+</button>
+<button onclick="navigateTo('quiz')" data-nav="quiz" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60 shrink-0">
+<i data-lucide="sparkles" class="w-4 h-4"></i> เกมทายใจ
+</button>
+<button onclick="navigateTo('pet')" data-nav="pet" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 text-zinc-600 hover:bg-zinc-200/60 shrink-0">
+<i data-lucide="cat" class="w-4 h-4"></i> สัตว์เลี้ยง
+</button>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 sm:px-6 py-4 sm:py-6">
+<!-- ========================================== -->
+<!-- SECTION 0: DASHBOARD                       -->
+<!-- ========================================== -->
+<section id="sec-dashboard" class="space-y-6 fade-in">
+<!-- Welcome & Connection Banner -->
+<div class="bg-white border border-zinc-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+<div>
+<p class="text-xs font-medium text-zinc-400 uppercase tracking-wider" id="dash-date">วันนี้</p>
+<h2 class="text-xl font-bold text-zinc-900 mt-1" id="dash-greeting">สวัสดี, ยินดีต้อนรับกลับบ้าน</h2>
+<p class="text-sm text-zinc-500 mt-1" id="dash-subtext">ระยะทางเป็นเพียงตัวเลข เมื่อใจเราเชื่อมต่อกันเสมอ</p>
+</div>
+<div id="dash-invite-box" class="bg-zinc-50 border border-zinc-200 rounded-xl p-3.5 flex items-center justify-between gap-4">
+<div>
+<p class="text-[11px] font-medium text-zinc-500">แชร์รหัสนี้ให้อีกฝ่าย</p>
+<p class="text-lg font-mono font-bold tracking-widest text-zinc-900" id="dash-code-display">------</p>
+</div>
+<button onclick="copyInviteCode()" class="px-3 py-2 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition-colors">
+คัดลอก
+</button>
+</div>
+</div>
+<!-- 5 Feature Summary Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Card 0: Chat Shortcut -->
+<div onclick="navigateTo('chat')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between shadow-2xs">
+<div>
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center">
+<i data-lucide="message-circle" class="w-4 h-4"></i>
+</div>
+<h3 class="font-semibold text-zinc-900">แชตคู่รัก (Chat)</h3>
+</div>
+<i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
+</div>
+<p id="dash-latest-chat" class="text-xs text-zinc-600 line-clamp-1 bg-zinc-50 p-2.5 rounded-xl border border-zinc-100">ส่งข้อความ รูปภาพ หรือสติกเกอร์หากันได้ตลอดเวลา</p>
+</div>
+<p class="text-xs text-zinc-400 mt-3 pt-2 border-t border-zinc-100">แตะเพื่อเปิดห้องแชตส่วนตัว</p>
+</div>
+<!-- Card 1: Daily Us -->
+<div onclick="navigateTo('daily')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between shadow-2xs">
+<div>
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+<i data-lucide="heart-pulse" class="w-4 h-4"></i>
+</div>
+<h3 class="font-semibold text-zinc-900">Daily Us</h3>
+</div>
+<i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
+</div>
+<div class="grid grid-cols-2 gap-3" id="dash-daily-preview"></div>
+</div>
+<p class="text-xs text-zinc-400 mt-3 pt-2 border-t border-zinc-100">แตะเพื่อเช็กอินความรู้สึกวันนี้</p>
+</div>
+<!-- Card 2: Two Little Pets -->
+<div onclick="navigateTo('pet')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between shadow-2xs">
+<div>
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+<i data-lucide="cat" class="w-4 h-4"></i>
+</div>
+<h3 class="font-semibold text-zinc-900" id="dash-pet-name">Two Little Pets</h3>
+</div>
+<i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-2xl animate-float" id="dash-pet-avatar">🐱</div>
+<div class="flex-1 space-y-1.5">
+<div>
+<div class="flex justify-between text-[11px] mb-1"><span class="text-zinc-500">ความอิ่ม</span><span class="font-medium text-zinc-900" id="dash-pet-hunger">80%</span></div>
+<div class="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden"><div id="dash-pet-hunger-bar" class="h-full bg-zinc-900 rounded-full" style="width: 80%"></div></div>
+</div>
+<div>
+<div class="flex justify-between text-[11px] mb-1"><span class="text-zinc-500">ความสุข</span><span class="font-medium text-zinc-900" id="dash-pet-happy">80%</span></div>
+<div class="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden"><div id="dash-pet-happy-bar" class="h-full bg-zinc-900 rounded-full" style="width: 80%"></div></div>
+</div>
+</div>
+</div>
+</div>
+<p class="text-xs text-zinc-400 mt-3 pt-2 border-t border-zinc-100">ช่วยกันดูแลให้อาหารและเล่นกับเจ้าตัวน้อย</p>
+</div>
+<!-- Card 3: Someday Together -->
+<div onclick="navigateTo('someday')" class="group cursor-pointer bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between shadow-2xs">
+<div>
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+<i data-lucide="compass" class="w-4 h-4"></i>
+</div>
+<h3 class="font-semibold text-zinc-900">Someday Together</h3>
+</div>
+<span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-900" id="dash-someday-percent">0%</span>
+</div>
+<p class="text-sm text-zinc-600 mb-2.5" id="dash-someday-summary">ยังไม่มีรายการสิ่งที่อยากทำด้วยกัน</p>
+<div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+<div id="dash-someday-bar" class="h-full bg-zinc-900 rounded-full transition-all duration-500" style="width: 0%"></div>
+</div>
+</div>
+<p class="text-xs text-zinc-400 mt-3 pt-2 border-t border-zinc-100">วางแผนสถานที่ หนัง และกิจกรรมในอนาคต</p>
+</div>
+<!-- Card 4: How Well Do You Know Me? -->
+<div onclick="navigateTo('quiz')" class="group cursor-pointer md:col-span-2 bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl p-5 transition-all flex flex-col justify-between shadow-2xs">
+<div>
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+<i data-lucide="sparkles" class="w-4 h-4"></i>
+</div>
+<h3 class="font-semibold text-zinc-900">How Well Do You Know Me? (เกมทายใจ)</h3>
+</div>
+<i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
+</div>
+<div class="flex items-center justify-between bg-zinc-50 border border-zinc-100 rounded-xl p-3">
+<div class="text-center flex-1">
+<p class="text-xs text-zinc-500" id="dash-score-p1-name">คุณ</p>
+<p class="text-lg font-bold text-zinc-900" id="dash-score-p1">0</p>
+</div>
+<div class="text-xs font-mono text-zinc-300">VS</div>
+<div class="text-center flex-1">
+<p class="text-xs text-zinc-500" id="dash-score-p2-name">คนพิเศษ</p>
+<p class="text-lg font-bold text-zinc-900" id="dash-score-p2">0</p>
+</div>
+</div>
+</div>
+<p class="text-xs text-zinc-400 mt-3 pt-2 border-t border-zinc-100" id="dash-quiz-status">ทายใจกันผ่านคำถามสนุกๆ (รองรับทั้งตัวเลือกและพิมพ์ตอบ)</p>
+</div>
+</div>
+<!-- Recent Activity Feed -->
+<div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs">
+<h3 class="text-sm font-semibold text-zinc-900 mb-3 flex items-center gap-2">
+<i data-lucide="activity" class="w-4 h-4 text-zinc-500"></i> ความเคลื่อนไหวล่าสุด
+</h3>
+<div id="dash-activity-list" class="space-y-2.5 text-sm">
+<p class="text-xs text-zinc-400">ยังไม่มีความเคลื่อนไหว</p>
+</div>
+</div>
+</section>
+<!-- ========================================== -->
+<!-- SECTION 1: REAL-TIME CHAT                  -->
+<!-- ========================================== -->
+<section id="sec-chat" class="hidden flex flex-col h-[75vh] sm:h-[78vh] bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-2xs fade-in">
+<!-- Chat Header -->
+<div class="px-5 py-3.5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-bold">💬</div>
+<div>
+<h3 class="font-bold text-sm text-zinc-900">แชตของเราสองคน</h3>
+<p class="text-[11px] text-zinc-500">ส่งข้อความ รูปภาพ วิดีโอ หร
